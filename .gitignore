@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+ServiceDesk_data/
+#cases_did.csv
+#ServiceDesk_data/studentenrollments_did.csv
+*.DS_Store
+*.docx
+*.pdf
+*.csv
+*.png
+*.Rproj
+Lists.nb.html
+ServiceDesk.Rproj
+ServiceDesk_review.rtf
