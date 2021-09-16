@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-ServiceDesk_data/
+data/
 #cases_did.csv
 #ServiceDesk_data/studentenrollments_did.csv
 *.DS_Store
