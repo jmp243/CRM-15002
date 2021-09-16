@@ -1,0 +1,51 @@
+---
+title: "cases"
+author: "Jung Mee Park"
+date: "9/14/2021"
+output: html_document
+---
+_Hello_ "Hello"
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Go to this website [website] () [link name] (link)
+### header 3
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+### for CRM-15002
+    1.break out service desk cases that are initiated by students vs other
+    2. use the resulting student data to examine if and how students create cases in SD 
+        a. by dept
+        b. across dept
+
+Here we are seeking to answer the following questions:
+    - what mode do students go to first when they want to solve a problem? (overall and by dept)
+    - do students tend to avail themselves of multiple avenues of service desk for the same problem? If so, how? does it vary by dept? 
+
+SF objects to be used:
+    cases
+    student enrollments
+    <!-- chattranscript -->
+    
+```{r cars}
+summary(cars)
+```
+# evaluate some merged data
+```{r}
+table(left_enroll$DeveloperName, left_enroll$class_standing)
+  
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
