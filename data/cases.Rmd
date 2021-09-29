@@ -31,9 +31,13 @@ SF objects to be used:
     student enrollments
     <!-- chattranscript -->
     
-```{r cars}
-summary(cars)
+```{r}
+table(cases_did$RecordTypeId)
 ```
+```{r}
+
+```
+
 # evaluate some merged data
 ```{r}
 table(left_enroll$DeveloperName, left_enroll$class_standing)
@@ -49,3 +53,254 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Tricky thing to summarize if 
+
+x = time, y = origin, do scatterplots, lines linking data points to users. shift alpha low. 
+do it as first pass. 
+
+What types of transitions are happening? 
+
+Plot contacts by divisions. 
+
+# figure out average length of time from one case to the next case per user
+```{r}
+library(dplyr)                                        
+origin_cases %>% distinct(new_ID, .keep_all = TRUE)
+origin_cases %>% group_by(new_ID) %>% filter(row_number() == 1)
+origin_cases %>% group_by(new_ID) %>% slice(1)
+```
+ or you can just see this 
+```{r}
+length(unique(origin_cases[["AZ_time4"]])) #143866
+length(unique(origin_cases[["new_ID"]])) #47506
+length(unique(origin_cases[["Id"]])) #145212
+```
+ # look at the everything data sample
+```{r}
+length(unique(everything[["new_ID"]]))
+```
+ # This may not be so important though.
+ ## for every new_ID calculate the time intervals from one case to the next 
+ ## if the new_ID only has one case then skip this. 
+ ## store the average lead/lag per new_ID in a new column
+
+ remove duplicates in origin cases
+```{r}
+origin_case2 <- origin_cases %>%
+  arrange(new_ID, -CaseNumber) %>%
+  filter(duplicated(CaseNumber) == FALSE) #down to 145,212
+```
+ 
+```{r}
+origin_cases %>% group_by(new_ID) %>% 
+  summarise(COUNT = n()) 
+# %>% 
+#   summarise(mean= mean(COUNT)) # mean = 4.05
+```
+subset data to multiple row only
+
+lag and lead
+https://dplyr.tidyverse.org/reference/lead-lag.html
+```{r}
+multi_cases <- origin_cases %>% group_by(new_ID) %>% 
+  mutate(COUNT = n())
+
+multi_cases <- multi_cases %>% 
+  filter(COUNT >= 2)
+```
+looking at the unique length
+remove duplicates
+```{r}
+
+```
+
+```{r}
+length(unique(multi_cases[["new_ID"]])) #31039
+```
+
+```{r}
+
+```
+summary with removed duplicates
+```{r}
+origin_case2 <- origin_cases %>%
+   arrange(new_ID, -CaseNumber) %>%
+   filter(duplicated(CaseNumber) == FALSE) #down to 128,745
+
+origin_case2 <- origin_case2 %>% group_by(new_ID) %>% 
+  mutate(COUNT = n())
+
+summary(origin_case2$COUNT)
+```
+
+new length
+```{r}
+length(unique(origin_case2[["new_ID"]])) 
+```
+```{r}
+origin_case3 <- subset(origin_case2, select = c(new_ID, Students, Department__c, Cumulative_GPA__c, 
+                                                period, Origin, COUNT, Created_Day_of_Week__c,
+                                                AZ_date4, AZ_time, CaseNumber))
+
+origin_case3 %>% 
+  group_by(new_ID) %>% 
+  summarise(order_count = max(COUNT)) %>% 
+  ungroup()
+
+```
+```{r}
+origin_case3 %>% 
+  group_by(new_ID) %>% 
+  arrange(AZ_time) %>%
+    # select(c(new_ID, AZ_time, CaseNumber, Department__c, Origin, COUNT)) %>%
+  mutate(seqnum = 1:length(new_ID))
+```
+try getting a new column that has time since last interaction
+look at the data 
+```{r}
+origin_case3 %>% 
+  select(c(new_ID, AZ_time, CaseNumber, COUNT, seqnum)) %>%
+  arrange(new_ID)
+
+```
+Also, create a new column that stores time since last interaction for new_ID's that have seqnum that is greater than 1.
+```{r}
+origin_case3 <- origin_case2 %>% 
+   mutate(AZ_date4 = as.Date(AZ_time4)) %>% 
+   mutate(AZ_time = as.POSIXlt(AZ_time4, tz = "",
+                               tryFormats = c("%Y-%m-%d %H:%M:%OS"), 
+                               optional = FALSE))
+
+
+# origin_case4 <- origin_case3 %>%
+#       group_by(RUN = data.table::rleid(new_ID)) %>%
+#       # group_by(new_ID) %>%
+#       summarize(START = min(AZ_time),
+#                 END = max(AZ_time),
+#                 MAX = max(seqnum)) %>% 
+#       mutate(DURATION_HRS = as.numeric((END - START)/60)) #what did I do here?
+
+origin_case3 %>% 
+  select(c(new_ID,seqnum, AZ_time)) %>% 
+  group_by(new_ID) %>% 
+  arrange(desc(seqnum)) %>% 
+  # mutate(time_since = time at seqnum == 2 minus time at seqnum == 1 )
+  
+```
+
+Code with David's help using dplyr
+```{r}
+origin_case2 <- origin_case2 %>% 
+  group_by(new_ID) %>% 
+  arrange(seqnum) %>% 
+  # mutate(n = n()) %>% # essentially count
+  mutate(tmp = lag(AZ_time),
+         diff = AZ_time - tmp)
+
+```
+How do I analyze lag time? 
+```{r}
+
+```
+
+
+prune the department names
+```{r}
+table(origin_case2$Department__c)
+
+sort1.Dept <- origin_case2[order(Department__c), ]
+```
+
+
+plot a sample
+```{r}
+out_plot3 <- origin_case2 %>% 
+  # pivot_longer(index) %>% 
+  filter(seqnum > 70) %>% 
+  ggplot(aes(x=AZ_time4, y=Origin, group=new_ID)) +
+  geom_point(aes(colour=new_ID)) + 
+  geom_line(aes(colour=new_ID)) +
+  geom_dl(aes(label=new_ID), method="last.points") # or "first.points"
+
+# out_plot3 <- out_plot3 + geom_label_repel(aes(label = new_ID),
+#                                             box.padding   = 0.35, 
+#                                             point.padding = 0.5,
+#                                             segment.color = 'grey50') 
+print(out_plot3)
+
+```
+
+look at https://www.r-bloggers.com/2018/12/simulating-multi-state-models-with-r/\
+My cases can transition from 
+
+chat to chat
+chat to email
+chat to text
+chat to phone
+chat to in person
+chat to offline chat
+chat to zoom
+chat to webform
+
+```{r}
+library("mstate")
+tmat <- mstate::transMat(x = list(c(1,2,3,4,5,6,7,8), 
+                         c(1, 2, 8), 
+                         c(4, 5, 6), 
+                         c(5, 6),
+                         c(),
+                         c()),
+                       names = c("Chat","Email","In Person", "Zoom",
+                                "Offline Chat","Phone","Text","Webform"))
+print(tmat)
+
+
+```
+look at the important orgins
+```{r}
+table(left_cases$Origin, left_cases$Students)
+
+```
+chat to chat
+chat to email
+chat to phone
+chat to webform
+chat to offline chat
+chat to zoom
+chat to in person
+chat to text
+
+phone to chat
+phone to email
+phone to phone
+phone to webform
+phone to offline chat
+phone to zoom
+phone to in person
+phone to text
+
+email to chat
+email to email
+email to phone
+email to webform
+webform to chat
+webform to email
+webform to phone
+webform to webform
+
+change origins into 6 modes
+```{r}
+table(origin_case3$Mode)
+```
+
+Create two 6 by 6 transition matrices. 
+
+ Try https://cran.r-project.org/web/packages/hesim/vignettes/mstate.html
+```{r}
+
+```
+ 
+# How likely are users changing from one mode to a different mode?
+# How likely are users changing from one department to a different department?
+

@@ -70,6 +70,3 @@ chattran <- chattran %>%
 
 # write.csv(chattran, file = "chattran.csv")
 
-
-
-
