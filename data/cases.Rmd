@@ -294,13 +294,88 @@ change origins into 6 modes
 table(origin_case3$Mode)
 ```
 
+First modes used 
+```{r}
+first_mode <- student_data2 %>% 
+  filter(seqnum == 1)
+
+table(first_mode$Mode, first_mode$Department__c)
+```
+table with first dept
+```{r}
+table(first_mode$Dept)
+```
+
 Create two 6 by 6 transition matrices. 
 
  Try https://cran.r-project.org/web/packages/hesim/vignettes/mstate.html
 ```{r}
-
+tibble(origin_case5)
+```
+ so how many students create more than one case? 
+```{r}
+summary(student_data2$seqnum)
 ```
  
 # How likely are users changing from one mode to a different mode?
+```{r}
+Mode_graph <- origin_case2 %>% 
+  pivot_longer(Mode, names_to = "question", values_to = "response", 
+               values_drop_na = TRUE) %>%
+  ggplot(aes(x = response, fill = Students)) +
+  geom_bar() +
+  # geom_text(stat='count', aes(label=..count..)) +
+  labs(x = "Mode", y = "Count") 
+
+Mode_graph <- Mode_graph + labs(title = "Cases per Mode",
+                              # subtitle = "", 
+                              fill = "Status") +
+                              scale_fill_discrete(
+                              # breaks=c("Graduate", "Undergraduate", "NA"),
+                              labels=c("Graduate", "Undergraduate", "Not Students"))
+
+print(Mode_graph)
+
+```
+
+Get information on number of sequences. It could be from the seqnum
+```{r}
+student_data2 %>% 
+  summarize(mean = mean(seqnum)) 
+```
+
+print the geom tile
+```{r}
+Mode_tile <-
+  ggplot(data=subset(origin_case4, !is.na(Mode)), aes(y = Mode, x = next_mode)) +
+  geom_tile(aes(fill=prob), color = "white") +
+  # scale_fill_manual(values=colors) +
+  labs(title = "Likelihood of Moving to the Another Mode",
+       x = "Next Mode", y = "Starting Mode") +
+  scale_fill_gradient(low = "#86ebc9",
+                      high = "#09855c",
+                      guide = "colorbar") 
+  # theme_minimal()
+
+Mode_tile
+```
 # How likely are users changing from one department to a different department?
 
+```{r}
+Dept_tile <-
+  ggplot(data=subset(origin_case5, !is.na(Dept)), aes(y = Dept, x = ord.x)) +
+  geom_tile(aes(fill=prob), color = "white") +
+  # scale_fill_manual(values=colors) +
+  labs(title = "Likelihood of Moving to the Another Department",
+       x = "Next Department", y = "Starting Department") +
+  scale_fill_gradient(low = "#86ebc9",
+                      high = "#09855c",
+                      guide = "colorbar") 
+# theme_minimal()
+
+Dept_tile
+
+```
+##TraMiner 
+data in SPELL form if starting with TMP and end with AZtime (in POSIXlt)
+SPELL format would be new_ID, seqnum, AZ_time, tmp, Mode or Dept. 
