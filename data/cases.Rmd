@@ -343,6 +343,45 @@ Get information on number of sequences. It could be from the seqnum
 student_data2 %>% 
   summarize(mean = mean(seqnum)) 
 ```
+mean time for non -first cases
+```{r}
+student_data2 %>% 
+  group_by(Mode) %>% 
+  filter(seqnum >=2) %>% 
+  summarize(mean_time = mean(tm1.dechr))
+
+student_data2 %>% 
+  filter(seqnum >= 2) %>% 
+  # summarize(mean_time = mean(tm1.dechr))
+  summarize(count = n())
+```
+
+first modes of comm
+```{r}
+first_mode %>% 
+  group_by(Mode) %>% 
+  summarize(mean_time = mean(tm1.dechr))
+```
+overview of percentages for modes used
+```{r}
+overview_pct <- first_mode %>%
+  group_by(Dept) %>%
+  drop_na(Dept) %>%
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count))
+
+overview_pct1 <- student_data2 %>%
+  group_by(Dept) %>%
+  drop_na(Dept) %>%
+  summarize(count = n()) %>%  
+  mutate(pct = count/sum(count))
+
+overview_pct2 <- student_data2 %>%
+  group_by(Mode) %>%
+  drop_na(Mode) %>%
+  summarize(count = n()) %>%  #count records by species
+  mutate(pct = count/sum(count))
+```
 
 print the geom tile
 ```{r}
