@@ -11,4 +11,5 @@ CRM-15002/data/
 *.csv
 *.png
 *.Rproj
+*.html
 Lists.nb.html
