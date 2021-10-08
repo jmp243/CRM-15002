@@ -2,7 +2,9 @@
 title: "cases"
 author: "Jung Mee Park"
 date: "9/14/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 _Hello_ "Hello"
 ```{r setup, include=FALSE}
@@ -257,11 +259,27 @@ print(tmat)
 
 
 ```
-look at the important orgins
+look at when zoom was added to the origins
 ```{r}
-table(left_cases$Origin, left_cases$Students)
+
+origin_case2 %>% 
+  select(CreatedDate, Origin) %>% 
+  mutate(Date = as.Date(CreatedDate)) %>% 
+  group_by(Origin) %>% 
+  filter(Date == min(Date)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup()
+
+origin_case2 %>% 
+  select(CreatedDate, Origin) %>% 
+  mutate(max_Date = as.Date(CreatedDate)) %>% 
+  group_by(Origin) %>% 
+  filter(max_Date == max(Date)) %>% 
+  slice(1) %>% # takes the first occurrence if there is a tie
+  ungroup()
 
 ```
+## Relations
 chat to chat
 chat to email
 chat to phone
@@ -301,6 +319,22 @@ first_mode <- student_data2 %>%
 
 table(first_mode$Mode, first_mode$Department__c)
 ```
+
+looking for cases with only 1 seqnum
+```{r}
+multiples <- origin_case2 %>% 
+  filter(seqnum >= 2) 
+
+singles <- origin_case2 %>% 
+  filter(COUNT == 1) #19510
+```
+subtract multiples from overall
+```{r}
+singleton <- student_data2 %>% 
+  filter(COUNT == 1) #11939
+```
+
+
 table with first dept
 ```{r}
 table(first_mode$Dept)
@@ -362,6 +396,31 @@ first_mode %>%
   group_by(Mode) %>% 
   summarize(mean_time = mean(tm1.dechr))
 ```
+looking at first mode in terms of financial aid
+```{r}
+first_mode %>% 
+  group_by(Mode) %>% 
+  filter(Dept=="Financial Aid") %>% 
+  summarize(count = n())%>% 
+  mutate(pct = count/sum(count))
+```
+first mode for registrar
+```{r}
+first_mode %>% 
+  group_by(Mode) %>% 
+  filter(Dept=="Registrar") %>% 
+  summarize(count = n())%>% 
+  mutate(pct = count/sum(count))
+```
+percent students for departments
+```{r}
+origin_case2 %>% 
+  group_by(Students) %>% 
+  filter(Dept=="Financial Aid") %>% 
+  summarize(count = n())%>% 
+  mutate(pct = count/sum(count))
+```
+
 overview of percentages for modes used
 ```{r}
 overview_pct <- first_mode %>%
@@ -369,6 +428,8 @@ overview_pct <- first_mode %>%
   drop_na(Dept) %>%
   summarize(count = n()) %>% 
   mutate(pct = count/sum(count))
+
+```
 
 overview_pct1 <- student_data2 %>%
   group_by(Dept) %>%

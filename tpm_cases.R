@@ -162,7 +162,7 @@ origin_case4 <- origin_case2 %>%
   mutate(total_starts = sum(n),
          prob = n/total_starts)
 
-fct_explicit_na(origin_case4$next_mode, na_level = "End") # did it really do anything
+fct_explicit_na(origin_case4$next_mode, na_level = "End") # did it really do anything?
 #
 
 # new df for departments
@@ -279,14 +279,14 @@ print(CreatedDate_graph0)
 tm1.dechr <- hour(left_cases$AZ_time) + minute(left_cases$AZ_time)/60 + second(left_cases$AZ_time)/3600
 left_cases <- dplyr::mutate(left_cases, tm1.dechr) 
 
-violin_data <- origin_case2 %>%
-  group_by(Mode) %>%
-  mutate(Mode_start = n()) 
-
-mode_violin <- ggplot(violin_data, aes(Mode, Mode_start)) + 
-  geom_point(scale = "count") + 
-  # geom_jitter(height = 0, width = 0.1)
-mode_violin
+# violin_data <- origin_case2 %>%
+#   group_by(Mode) %>%
+#   mutate(Mode_start = n()) 
+# 
+# mode_violin <- ggplot(violin_data, aes(Mode, Mode_start)) + 
+#   geom_point(scale = "count") + 
+#   # geom_jitter(height = 0, width = 0.1)
+# mode_violin
 
 # remove unused dataframes
 rm("origin_cases2","origin_cases3")
@@ -341,7 +341,7 @@ Mode_tile <-
   ggplot(data=subset(origin_case4, !is.na(Mode)), aes(y = Mode, x = ord_mode)) +
   geom_tile(aes(fill=prob), color = "white") +
   # scale_fill_manual(values=colors) +
-  labs(title = "Likelihood of Moving to the Another Mode",
+  labs(title = "Likelihood of Moving to the Another Mode", subtitle = "Full data from 5/2/2020 - 9/15/2021",
        x = "Next Mode", y = "Starting Mode") +
   scale_fill_gradient(low = "#86ebc9",
                       high = "#09855c",
@@ -365,7 +365,7 @@ Dept_tile <-
   ggplot(data=subset(origin_case5, !is.na(Dept)), aes(y = Dept, x = ord.x)) +
   geom_tile(aes(fill=prob), color = "white") +
   # scale_fill_manual(values=colors) +
-  labs(title = "Likelihood of Moving to the Another Department",
+  labs(title = "Likelihood of Moving to the Another Department",subtitle = "Full data from 5/2/2020 - 9/15/2021",
        x = "Next Department", y = "Starting Department") +
   scale_fill_gradient(low = "#86ebc9",
                       high = "#09855c",
@@ -501,6 +501,12 @@ library(markovchain)
 # fit model on the data by ML
 library(MSGARCH)
 fit <- FitML(spec = Mode, data = origin_case2)
+
+# convert count as a factor
+origin_case2$factor_count <- as.factor(origin_case2$COUNT)
+summary(origin_case2$factor_count)
+
+# plot factor_count
 
 # 6 by 6 mstate
 # tmat <- mstate::transMat(x = list(c(2, 3, 5, 6),

@@ -356,7 +356,7 @@ print(mode_graph)
 # look at first dept
 first_mode %>% 
   group_by(Mode) %>% 
-  summarize(mean = eman)
+  summarize(mean_time = mean(tm1.dechr))
 violin_first <- first_mode %>%
   group_by(Mode) %>%
   drop_na(Mode) %>% 
@@ -447,6 +447,28 @@ violin_mode3 <- violin_mode3 +  labs(title = "Day of the week for student cases"
   scale_y_continuous(breaks=seq(0,24,4))
 
 print(violin_mode3)
+
+# revisit old department distinctions
+overview_pct1 <- origin_case2 %>%
+  # arrange(Mode) %>%
+  # gather(Mode, Dept) %>%
+  group_by(Department__c) %>%
+  drop_na(Department__c) %>%
+  summarize(count = n()) %>%  #count records by species
+  mutate(pct = count/sum(count))
+
+pct_graph2 <- 
+  ggplot(overview_pct1, aes(x=Department__c, y=count, fill=Department__c) +
+  geom_bar(stat='identity') +
+  labs(x = "Department", y = "Number of Cases") +
+  # coord_flip() +
+  theme(legend.position="none") +
+  geom_text(aes(label = scales::percent(pct), y = if_else(count > 0.1*max(count), count/2, count+ 0.04*max(count))))
+
+pct_graph2 <- pct_graph2 + labs(title = "First department contacted", 
+                              subtitle = "full data from 5/2/2020 to 9/14/2021",  fill = "Dept") 
+
+print(pct_graph2)
 # non_students <- non_ugrad %>% 
 #   filter(Students != "Graduate")
 # 
