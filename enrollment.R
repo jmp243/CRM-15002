@@ -450,23 +450,26 @@ print(violin_mode3)
 
 # revisit old department distinctions
 overview_pct1 <- origin_case2 %>%
-  # arrange(Mode) %>%
-  # gather(Mode, Dept) %>%
   group_by(Department__c) %>%
   drop_na(Department__c) %>%
-  summarize(count = n()) %>%  #count records by species
-  mutate(pct = count/sum(count))
+  summarize(count1 = n()) %>%  #count records by species
+  # mutate(pct1 = round(count1/sum(count1),4))
+  mutate(pct1 = count1/sum(count1))
 
+overview_pct1$Department__c = recode_factor(overview_pct1$Department__c, 
+                                      "Student Engagement and Career Development" = "SECD",
+                                      "Dean of Students\xa0" = "Dean of Students")
 pct_graph2 <- 
-  ggplot(overview_pct1, aes(x=Department__c, y=count, fill=Department__c) +
+  ggplot(overview_pct1, aes(x=Department__c, y=count1, fill=Department__c)) +
   geom_bar(stat='identity') +
   labs(x = "Department", y = "Number of Cases") +
-  # coord_flip() +
+  coord_flip() +
   theme(legend.position="none") +
-  geom_text(aes(label = scales::percent(pct), y = if_else(count > 0.1*max(count), count/2, count+ 0.04*max(count))))
+  geom_text(aes(label = scales::percent(pct1), 
+                y = if_else(count1 > 0.1*max(count1), count1/2, count1+ 0.04*max(count1))))
 
-pct_graph2 <- pct_graph2 + labs(title = "First department contacted", 
-                              subtitle = "full data from 5/2/2020 to 9/14/2021",  fill = "Dept") 
+pct_graph2 <- pct_graph2 + labs(title = "All departments", 
+                              subtitle = "full data from 5/2/2020 to 9/14/2021",  fill = "Deptartment") 
 
 print(pct_graph2)
 # non_students <- non_ugrad %>% 

@@ -1,6 +1,20 @@
 # TraMineR
 # jmpark@arizona.edu
 # Oct. 4, 2021
+library(dplyr)
+library(ggplot2)
+library(reshape)
+library(reshape2)
+library(RColorBrewer)
+library(tibble)
+library(tidyverse)
+library(ggstatsplot)
+library(lubridate)
+library(forcats)
+library(purrr)
+library(foreign)
+library(cluster)
+library(gridExtra)
 library(seqinr)
 library(adegenet)
 library(ape)
@@ -9,6 +23,7 @@ library(DECIPHER)
 library(viridis)
 library(ggplot2)
 library(TraMineR)
+library(WeightedCluster)
 library(googleVis)
 library(directlabels)
 # read in data 
@@ -46,7 +61,9 @@ student_pruned <- student_pruned %>%
   mutate(AZ_date = as.Date(AZ_date4))
 
 ## subset data per period
-peak_fall2021 <- filter(student_data2, period == "Peak Fall 2021")
+# peak_fall2021 <- filter(student_data2, period == "Peak Fall 2021")
+peak_fall2021 <- filter(student_pruned, period == "Peak Fall 2021")
+
 
 # redo transition probabilites
 peak_fall2021$next_mode <- as.character(peak_fall2021$next_mode)
@@ -136,6 +153,19 @@ out_plot <- out_plot + labs(title = "Sample Cases for Modes Used",
                             subtitle = "students from 8/6 - 9/15/2021",  fill = "Mode")
 
 print(out_plot)
+
+
+out_plot2 <- random_fall %>% 
+  # pivot_longer(index) %>% 
+  ggplot(aes(x=AZ_date, y=Dept, group=new_ID)) +
+  geom_point(aes(colour=new_ID)) + 
+  geom_line(aes(colour=new_ID)) +
+  geom_dl(aes(label=new_ID), method="last.points") # or "first.points"
+
+out_plot2 <- out_plot2 + labs(title = "Sample Cases for Departments", 
+                            subtitle = "students from 8/6 - 9/15/2021",  fill = "Dept")
+
+print(out_plot2)
 # student_pruned <- student_pruned %>% 
 #   # group_by(new_ID) %>% 
 #   mutate(AZ_time2 = as.POSIXct(tmp, format = "%y/%m/%d %H:%M:%S"))
@@ -189,3 +219,143 @@ print(out_plot)
 # df.form <- seqformat(as.data.frame(case_dates), id='New_ID', 
 #                      begin='seqnum', end='end_time', status='Dept',
 #                      from='SPELL', to='STS', process=FALSE)
+
+write.csv(peak_fall2021, file = "peak_fall2021.csv")  
+write.csv(fall2021_dept, file = "fall2021_dept.csv")  
+write.csv(fall2021_prob, file = "fall2021_mode.csv")  
+
+# fit data to TraMiner
+# first duration is not important
+# unequal sequence lengths
+# normalize sequence lengths by changing the alphabets
+
+setwd("~/Documents/Trellis/CRM-15002/sequence_analysis")
+setwd("~/Documents/Trellis/CRM-15002/sequence_analysis/fall2021_data")
+
+peak_fall2021 <- read.csv("peak_fall2021.csv", header = TRUE, na.strings=c("","NA"))
+fall_2021_dept <- read.csv("fall2021_dept.csv", header = TRUE, na.strings=c("","NA"))
+fall_2021_mode <- read.csv("fall2021_mode.csv", header = TRUE, na.strings=c("","NA"))
+peak_fall2021$new_ID <- as.factor(peak_fall2021$new_ID)
+peak_fall2021$AZ_date <- as.Date(peak_fall2021$AZ_date4)
+
+# subset data to new_ID's with more than one sequence
+multi_students <- peak_fall2021 %>% 
+  filter(seqnum>1) # this is only 11651
+
+table(multi_students$First_Generation__c)
+table(multi_students$Mode)
+
+table(unlist(multi_students[, -1]))
+
+# convert modes into factors
+multi_students$Mode <- as.factor(multi_students$Mode)
+multi_students$next_mode <- as.factor(multi_students$next_mode)
+
+dfCount <- count(multi_students,  c("Mode", "next_mode"))
+
+# TraMineR package
+seq <- seqdef(multi_students[, -1], xtstep = 1)
+
+# using other functions
+library(arules)
+library(arulesNBMiner)
+
+subset_multi <- multi_students %>% 
+  select(new_ID, Mode, next_mode, AZ_date, tmp, new_time)
+
+eclat(subset_multi, parameter = NULL, control = NULL)
+
+itemsets <- eclat(subset_multi)
+
+itemsets_sorted <- sort(itemsets)
+
+itemsets_sorted[1:5]
+
+itemsets <- eclat(subset_multi, parameter = list(minlen=9))
+inspect(itemsets)
+
+
+
+# subset from Fall 2021 peak data
+out <- subset(peak_fall2021, new_ID %in% c(8890918641,
+                                           5444850216,
+                                           1141922,
+                                           3451610,
+                                           5114826,
+                                           6258721))
+
+out_plot <- out %>% 
+  # pivot_longer(index) %>% 
+  ggplot(aes(x=AZ_date, y=Mode, group=new_ID)) +
+  geom_point(aes(colour=new_ID)) + 
+  geom_line(aes(colour=new_ID)) +
+  geom_dl(aes(label=new_ID), method="last.points") # or "first.points"
+
+out_plot <- out_plot + labs(title = "Sample Cases for Modes Used", 
+                            subtitle = "students from 8/6 - 9/15/2021",  fill = "Mode")
+
+print(out_plot)
+
+# dept
+out_plot1 <- out %>% 
+  # pivot_longer(index) %>% 
+  ggplot(aes(x=AZ_date, y=Dept, group=new_ID)) +
+  geom_point(aes(colour=new_ID)) + 
+  geom_line(aes(colour=new_ID)) +
+  geom_dl(aes(label=new_ID), method="last.points") # or "first.points"
+
+out_plot1 <- out_plot1 + labs(title = "Sample Cases for Depts Used", 
+                            subtitle = "students from 8/6 - 9/15/2021",  fill = "Mode")
+
+print(out_plot1)
+## sample data from TraMineR
+data('mvad')
+head(mvad)
+alphabet = seqstatl(mvad[,17:86])
+
+fulllabel<- c("employment", "further education",
+              "higher education","joblessness", "school", "training")
+shortlabel<- c("EM", "FE", "HE", "JL", "SC", "TR")
+seq_mvad<- seqdef(mvad[, 17:86], alphabet = alphabet,
+                  states = shortlabel, labels = fulllabel, weights = mvad$weight,
+                  xtstep = 6)
+seq_mvad[1:2,]
+print(seq_mvad[1:2,],format="SPS")
+
+## 
+data(actcal)
+actcal.seq <- seqdef(actcal,13:24,
+                     labels=c("> 37 hours", "19-36 hours", "1-18 hours", "no work"))
+
+### traminer with my data
+multi_students <- multi_students %>% 
+  arrange(tmp) %>% 
+  # group_by(new_ID) %>% 
+  # # mutate(seq_time = seq_len(n())) %>% 
+  # mutate(end_time = 1:n())
+  mutate(tmp_time = seq(1:11651))
+
+# multi_students <- multi_students %>% 
+#   arrange(AZ_time4) %>% 
+#   # group_by(new_ID) %>% 
+#   # # mutate(seq_time = seq_len(n())) %>% 
+#   # mutate(end_time = 1:n())
+#   mutate(newer_time = seq(1:11651))
+
+df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
+                     status='Mode', from='SPELL', to='STS', process=FALSE) 
+# df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "tmp_time", 
+                     # status='Mode', from='SPELL', to='STS', process=FALSE)
+multi_seq <- seqdef(df.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
+
+
+# creating an alphabet
+alphabet(multi_seq)
+
+# visualizing data
+# par(mfrow = c(2,2))
+par(mfrow = c(1,2))
+# seqiplot(multi_seq, border = NA, withlegend = FALSE)
+seqdplot(multi_seq, title = "State distribution plot", border = NA, withlegend = FALSE) # state distribution plot
+# seqfplot(multi_seq, border = NA, withlegend = FALSE)
+seqlegend(multi_seq)

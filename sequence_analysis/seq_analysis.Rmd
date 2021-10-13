@@ -1,0 +1,58 @@
+---
+title: "Seqeuence Analysis"
+author: "Jung Mee Park"
+date: "10/11/2021"
+output: html_document
+---
+# fit data to TraMiner
+# first duration is not important
+# unequal sequence lengths
+# normalize sequence lengths by changing the alphabets
+we are only using data that currently exists. 
+
+optimal matching it was developed for genomics. 
+clustering sequence. 
+
+state plots vs sequence plots
+Events don't have duration. Events have dates.
+
+number of sequences is 5000 to 10000 limit. 
+sequence length is 100-300. 
+alphabet size is 12-20 colors. 
+missing data, delete incomplete sequences. 
+
+```{r}
+length(unique(peak_fall2021[["new_ID"]])) #13301
+```
+students with multiple sequences
+```{r}
+multi_students <- peak_fall2021 %>% 
+  filter(seqnum>1) # this is only 11651
+```
+This is still larger than the TraMiner Sequence limit
+Toomey, Dan. R for Data Science : Learn and Explore the Fundamentals of Data Science with R. 2014. Community Experience Distilled. Web.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -507,6 +507,23 @@ origin_case2$factor_count <- as.factor(origin_case2$COUNT)
 summary(origin_case2$factor_count)
 
 # plot factor_count
+count_graph <- origin_case2 %>% 
+  pivot_longer(factor_count, names_to = "question", values_to = "response", 
+               values_drop_na = TRUE) %>%
+  ggplot(aes(x = response, fill = Students)) +
+  geom_bar() +
+  # geom_text(stat='count', aes(label=..count..)) +
+  # geom_boxplot() +
+  labs(x = "Number of cases created", y = "Count") 
+
+count_graph <- count_graph + labs(title = "Number of cases per ID",
+                                subtitle = "full data from May 2020 to Sept. 2021", 
+                                fill = "Status") +
+  scale_fill_discrete(
+    # breaks=c("Graduate", "Undergraduate", "NA"),
+    labels=c("Graduate", "Undergraduate", "Not Students"))
+
+print(count_graph)
 
 # 6 by 6 mstate
 # tmat <- mstate::transMat(x = list(c(2, 3, 5, 6),

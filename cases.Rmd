@@ -270,15 +270,24 @@ origin_case2 %>%
   slice(1) %>% # takes the first occurrence if there is a tie
   ungroup()
 
-origin_case2 %>% 
-  select(CreatedDate, Origin) %>% 
-  mutate(max_Date = as.Date(CreatedDate)) %>% 
-  group_by(Origin) %>% 
-  filter(max_Date == max(Date)) %>% 
-  slice(1) %>% # takes the first occurrence if there is a tie
-  ungroup()
+# origin_case2 %>% 
+#   select(CreatedDate, Origin) %>% 
+#   mutate(max_Date = as.Date(CreatedDate)) %>% 
+#   group_by(Origin) %>% 
+#   filter(max_Date == max(Date)) %>% 
+#   slice(1) %>% # takes the first occurrence if there is a tie
+#   ungroup()
 
 ```
+reexamine text
+```{r}
+origin_case2 %>% 
+  select(CreatedDate, Origin) %>% 
+  filter(Origin == "Text") %>% 
+  mutate(Date2 = as.Date(CreatedDate))
+  
+```
+
 ## Relations
 chat to chat
 chat to email
@@ -389,6 +398,18 @@ student_data2 %>%
   # summarize(mean_time = mean(tm1.dechr))
   summarize(count = n())
 ```
+mean time for student day of the week
+```{r}
+student_data2 %>% 
+  group_by(Day_of_Week) %>% 
+  summarize(mean_time1 = mean(tm1.dechr))
+```
+overall time averages
+```{r}
+origin_case2 %>% 
+  group_by(Created_Day_of_Week__c) %>% 
+  summarize(mean_time2 = mean(tm1.dechr))
+```
 
 first modes of comm
 ```{r}
@@ -404,6 +425,15 @@ first_mode %>%
   summarize(count = n())%>% 
   mutate(pct = count/sum(count))
 ```
+Overall dept breakdown
+```{r}
+origin_case2 %>% 
+  group_by(Dept) %>% 
+  # filter(Dept=="Registrar") %>% 
+  summarize(count = n())%>% 
+  mutate(pct = count/sum(count))
+```
+
 first mode for registrar
 ```{r}
 first_mode %>% 
