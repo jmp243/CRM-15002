@@ -29,6 +29,9 @@ students with multiple sequences
 multi_students <- peak_fall2021 %>% 
   filter(seqnum>1) # this is only 11651
 ```
+There are 5693 unique sequences in Mode for peak fall 2021. 
+
+
 This is still larger than the TraMiner Sequence limit
 Toomey, Dan. R for Data Science : Learn and Explore the Fundamentals of Data Science with R. 2014. Community Experience Distilled. Web.
 

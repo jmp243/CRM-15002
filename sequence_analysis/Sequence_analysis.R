@@ -348,6 +348,11 @@ df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_t
                      # status='Mode', from='SPELL', to='STS', process=FALSE)
 multi_seq <- seqdef(df.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
 
+### department format
+dept.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
+                     status='Dept', from='SPELL', to='STS', process=FALSE) 
+dept_seq <- seqdef(dept.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
+
 
 # creating an alphabet
 alphabet(multi_seq)
@@ -356,6 +361,13 @@ alphabet(multi_seq)
 # par(mfrow = c(2,2))
 par(mfrow = c(1,2))
 # seqiplot(multi_seq, border = NA, withlegend = FALSE)
-seqdplot(multi_seq, title = "State distribution plot", border = NA, withlegend = FALSE) # state distribution plot
+seqdplot(multi_seq, main = "State distribution plot", border = NA, with.legend = FALSE) # state distribution plot
 # seqfplot(multi_seq, border = NA, withlegend = FALSE)
 seqlegend(multi_seq)
+
+# visualizing department
+par(mfrow = c(1,2))
+# seqiplot(dept_seq, border = NA, withlegend = FALSE)
+seqdplot(dept_seq, main = "State distribution plot", border = NA, with.legend = FALSE) # state distribution plot
+# seqfplot(dept_seq, border = NA, withlegend = FALSE)
+seqlegend(dept_seq)
