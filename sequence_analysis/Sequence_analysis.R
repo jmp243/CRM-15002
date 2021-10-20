@@ -18,8 +18,6 @@ library(gridExtra)
 library(seqinr)
 library(adegenet)
 library(ape)
-library(ggtree)
-library(DECIPHER)
 library(viridis)
 library(ggplot2)
 library(TraMineR)
@@ -36,6 +34,9 @@ origin_case2 <- origin_case2 %>%
   # # mutate(seq_time = seq_len(n())) %>% 
   # mutate(end_time = 1:n())
   mutate(new_time = seq(1:145212))
+
+# drop some columns
+origin_case2 %>% select(-1, -2, -3) 
 
 # add next to data
 origin_case6 <- origin_case2 %>% 
@@ -79,6 +80,7 @@ fall2021_prob <- peak_fall2021 %>%
   group_by(Mode) %>% 
   mutate(total_starts = sum(n),
          prob = n/total_starts)
+  
 
 fct_explicit_na(fall2021_prob$next_mode, na_level = "End") 
 
@@ -341,9 +343,13 @@ multi_students <- multi_students %>%
 #   # # mutate(seq_time = seq_len(n())) %>% 
 #   # mutate(end_time = 1:n())
 #   mutate(newer_time = seq(1:11651))
+df.form <- read.csv("df_form.csv")
 
 df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
                      status='Mode', from='SPELL', to='STS', process=FALSE) 
+
+write.csv(df.form, file = "df_form.csv") 
+
 # df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "tmp_time", 
                      # status='Mode', from='SPELL', to='STS', process=FALSE)
 multi_seq <- seqdef(df.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
