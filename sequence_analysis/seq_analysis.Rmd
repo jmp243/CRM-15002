@@ -24,7 +24,7 @@ missing data, delete incomplete sequences.
 ```{r}
 length(unique(peak_fall2021[["new_ID"]])) #13301
 ```
-students with multiple sequences
+students with multiple sequences. 24,952 total and 11,651 has multiple
 ```{r}
 multi_students <- peak_fall2021 %>% 
   filter(seqnum>1) # this is only 11651
@@ -35,6 +35,24 @@ So like 2 people share the same sequence.
 
 This is still larger than the TraMiner Sequence limit
 Toomey, Dan. R for Data Science : Learn and Explore the Fundamentals of Data Science with R. 2014. Community Experience Distilled. Web.
+
+Frequency table
+```{r}
+df_freq_table = attr(seqtab(df_seq, idxs = 0, format='STS'), "freq")
+length(which(df_freq_table$Freq==1)) #1663
+
+```
+
+the alphabet
+```{r}
+alphabet(df_seq)
+```
+
+transitions probabilities
+```{r}
+trans = seqtrate(df_seq)
+round(trans,2)
+```
 
 
 ```{r setup, include=FALSE}

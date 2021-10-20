@@ -242,6 +242,11 @@ peak_fall2021$AZ_date <- as.Date(peak_fall2021$AZ_date4)
 
 # subset data to new_ID's with more than one sequence
 multi_students <- peak_fall2021 %>% 
+  group_by(new_ID) %>% 
+  arrange(AZ_time4) %>% 
+  mutate(seqnum = 1:length(new_ID))
+
+multi_students <- peak_fall2021 %>% 
   filter(seqnum>1) # this is only 11651
 
 table(multi_students$First_Generation__c)
@@ -253,30 +258,31 @@ table(unlist(multi_students[, -1]))
 multi_students$Mode <- as.factor(multi_students$Mode)
 multi_students$next_mode <- as.factor(multi_students$next_mode)
 
-dfCount <- count(multi_students,  c("Mode", "next_mode"))
+# dfCount <- count(multi_students,  c("Mode", "next_mode")) # error message
 
 # TraMineR package
-seq <- seqdef(multi_students[, -1], xtstep = 1)
+# seq <- seqdef(multi_students[, -1], xtstep = 1) # error 
+# [!] found '-' character in state codes, not recommended
+# Error in withCallingHandlers(expr, warning = function(w) if (inherits(w,  : 
+#     invalid multibyte string at '<93>Aut<68>entication failed on UAWifi<94>'
 
 # using other functions
 library(arules)
 library(arulesNBMiner)
 
-subset_multi <- multi_students %>% 
-  select(new_ID, Mode, next_mode, AZ_date, tmp, new_time)
-
-eclat(subset_multi, parameter = NULL, control = NULL)
-
-itemsets <- eclat(subset_multi)
-
-itemsets_sorted <- sort(itemsets)
-
-itemsets_sorted[1:5]
-
-itemsets <- eclat(subset_multi, parameter = list(minlen=9))
-inspect(itemsets)
-
-
+# subset_multi <- multi_students %>% 
+#   select(new_ID, Mode, next_mode, AZ_date, tmp, new_time)
+# 
+# eclat(subset_multi, parameter = NULL, control = NULL)
+# 
+# itemsets <- eclat(subset_multi)
+# 
+# itemsets_sorted <- sort(itemsets)
+# 
+# itemsets_sorted[1:5]
+# 
+# itemsets <- eclat(subset_multi, parameter = list(minlen=9))
+# inspect(itemsets)
 
 # subset from Fall 2021 peak data
 out <- subset(peak_fall2021, new_ID %in% c(8890918641,
@@ -343,37 +349,112 @@ multi_students <- multi_students %>%
 #   # # mutate(seq_time = seq_len(n())) %>% 
 #   # mutate(end_time = 1:n())
 #   mutate(newer_time = seq(1:11651))
-df.form <- read.csv("df_form.csv")
+df_wide <- read.csv("df_wide.csv", header = TRUE, na.strings=c("","NA"))
+# 
+# # df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time",
+# #                       status='Mode', from='SPELL', to='STS', process=FALSE)
+# 
+# write.csv(df.form, file = "df_form.csv")
+# df_wide = reshape(multi_students, idvar="new_ID", v.names="Mode", 
+#                    timevar="tmp_time", direction='wide') #11677 variables
+# 
+# df_wide_time = reshape(multi_students, idvar="new_ID", v.names="Mode", 
+#                   timevar="AZ_time4", direction='wide') # 11580 variables
 
-df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
-                     status='Mode', from='SPELL', to='STS', process=FALSE) 
+df_wide_date = reshape(multi_students, idvar="new_ID", v.names="Mode", 
+                  timevar="AZ_date", direction='wide') # 66 variables
 
-write.csv(df.form, file = "df_form.csv") 
+
+# write.csv(df_wide_date, file = "df_wide_date.csv")
+
 
 # df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "tmp_time", 
                      # status='Mode', from='SPELL', to='STS', process=FALSE)
-multi_seq <- seqdef(df.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
+
+# multi_seq <- read.csv("multi_seq.csv", header = TRUE, na.strings=c("","NA"))
+#Prepare a sequence for TraMineR:
+act_vals = c("1", "2", "3", "4", "5", "6")
+act_labels = c("Chat", "Email", "In Person", "Phone", "Webform", "Zoom")
+
+df_seq = seqdef(df_wide_date, var=28:66, states=act_vals, labels=act_labels, 
+                  id=df_wide_date$new_ID, informat='STS', compressed=TRUE)
+
+# creating an alphabet
+alphabet(df_seq)
+
+# multi_seq <- seqdef(df_wide_date, var = 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
+
+# write.csv(multi_seq, file = "multi_seq.csv")
+
+### Frequency Table
+df_freq_table = attr(seqtab(df_seq, idxs = 0, format='STS'), "freq")
+length(which(df_freq_table$Freq==1)) # length where Freq is one is 1663 or unique
+length(which(df_freq_table$Freq>=2))# SO ONLY 353 HAVE A NONE UNIQUE SEQUENCE.
+
+head(df_freq_table, 20)
+sum(df_freq_table$Freq[1:20]) #1258 users experienced the top 20 most common frequencies
+
+df_seq_len = seqlength(df_seq) # longest ones have 39 in it. 
+sum(df_seq_len==6) #157 people use all 6 cases
+
+## new dataset of mulit_seq
+multi_seq <- df_seq %>% 
+  mutate(seq = )
+  
+##
+df_seq6 = df_seq[ order(df_seq$`Mode.2021-08-07`, df_seq$`Mode.2021-08-08`,
+                         df_seq$`Mode.2021-08-09`, df_seq$`Mode.2021-08-10`,
+                         df_seq$`Mode.2021-08-11`, df_seq$`Mode.2021-08-12`), ] #it just shows up ordered
 
 ### department format
 dept.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
                      status='Dept', from='SPELL', to='STS', process=FALSE) 
 dept_seq <- seqdef(dept.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
 
+# write.csv(df_seq, file = "df_seq.csv")
 
-# creating an alphabet
-alphabet(multi_seq)
 
 # visualizing data
 # par(mfrow = c(2,2))
+# looks like i need to transpose some data
 par(mfrow = c(1,2))
-# seqiplot(multi_seq, border = NA, withlegend = FALSE)
-seqdplot(multi_seq, main = "State distribution plot", border = NA, with.legend = FALSE) # state distribution plot
-# seqfplot(multi_seq, border = NA, withlegend = FALSE)
-seqlegend(multi_seq)
+seqiplot(df_seq, border = NA, with.legend = FALSE) # adding with.missing = FALSE did not change the plot
+seqdplot(df_seq, main = "State distribution plot", with.legend = FALSE) # state distribution plot
+seqfplot(df_seq, border = NA, with.missing = FALSE, with.legend = FALSE, pbarw = TRUE)
+seqlegend(df_seq)
 
+## transitions 
+trans = seqtrate(df_seq)
+round(trans,2)
+
+# state frequencies
+state_freq <- seqstatd(df_seq)
 # visualizing department
 par(mfrow = c(1,2))
 # seqiplot(dept_seq, border = NA, withlegend = FALSE)
 seqdplot(dept_seq, main = "State distribution plot", border = NA, with.legend = FALSE) # state distribution plot
-# seqfplot(dept_seq, border = NA, withlegend = FALSE)
+# seqfplot(dept_seq, border = NA, with.missing = FALSE, withlegend = FALSE)
 seqlegend(dept_seq)
+
+
+
+# sequence lengths
+  seqlength(df_seq,)
+### matches
+matches = seqpm(df_seq, "[1].{3,}") # 428 sequences have 3 plus states after chats
+matches = seqpm(df_seq, "[1].{2,}") # 489 sequences have 2 plus states after chats
+matches = seqpm(df_seq, "[1].{1,}") # 585 sequences have 1 plus state after chats
+
+# entropy index 
+seqHtplot(df_seq)
+
+# 10 most freq seq 
+seqtab(df_seq)
+
+# with missing values
+subm <- seqsubm(df_seq, method = "CONSTANT", with.miss = TRUE)
+subm
+
+ms.seq <- seqdef(df_seq, left= "DEL", gaps = "DEL", right = "DEL")
+data.eseq <- seqecreate(df_seq, tevent = "act_vals", 
+                        end.event = attr(df_seq,'void'))
