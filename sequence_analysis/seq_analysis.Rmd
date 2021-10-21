@@ -42,6 +42,11 @@ df_freq_table = attr(seqtab(df_seq, idxs = 0, format='STS'), "freq")
 length(which(df_freq_table$Freq==1)) #1663
 
 ```
+all 6 used 
+```{r}
+df_seq_len = seqlength(df_seq)
+sum(df_seq_len==6) 
+```
 
 the alphabet
 ```{r}
@@ -54,9 +59,21 @@ trans = seqtrate(df_seq)
 round(trans,2)
 ```
 
+state frequencies
+```{r}
+seqstatd(df_seq)
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+ seq Ht plot
+```{r}
+seqHtplot(df_seq)
+```
+ten most frequent seq
+```{r}
+seqtab(df_seq)
 ```
 
 ## R Markdown

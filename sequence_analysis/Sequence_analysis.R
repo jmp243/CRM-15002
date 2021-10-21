@@ -53,8 +53,8 @@ case6_pruned <- subset(origin_case6, select = c(new_ID, CaseNumber, Students,
                                                 seqnum, Mode, next_mode, Dept, next_dept))
 
 write.csv(case6_pruned, file = "case6_pruned.csv")  
-# subset data 
-# to students
+
+# subset data to students
 student_pruned <- case6_pruned %>% 
   filter(Students != "Undergraduate"|Students !="Graduate") 
 
@@ -240,11 +240,14 @@ fall_2021_mode <- read.csv("fall2021_mode.csv", header = TRUE, na.strings=c("","
 peak_fall2021$new_ID <- as.factor(peak_fall2021$new_ID)
 peak_fall2021$AZ_date <- as.Date(peak_fall2021$AZ_date4)
 
+# re-calculate Fall seqnum
+# peak_fall2021 <- peak_fall2021 %>%
+#   group_by(new_ID) %>%
+#   arrange(AZ_time) %>%
+#   mutate(seqnum = 1:length(new_ID)) %>% 
+#   ungroup()
+  
 # subset data to new_ID's with more than one sequence
-multi_students <- peak_fall2021 %>% 
-  group_by(new_ID) %>% 
-  arrange(AZ_time4) %>% 
-  mutate(seqnum = 1:length(new_ID))
 
 multi_students <- peak_fall2021 %>% 
   filter(seqnum>1) # this is only 11651
@@ -316,32 +319,34 @@ out_plot1 <- out_plot1 + labs(title = "Sample Cases for Depts Used",
                             subtitle = "students from 8/6 - 9/15/2021",  fill = "Mode")
 
 print(out_plot1)
-## sample data from TraMineR
-data('mvad')
-head(mvad)
-alphabet = seqstatl(mvad[,17:86])
-
-fulllabel<- c("employment", "further education",
-              "higher education","joblessness", "school", "training")
-shortlabel<- c("EM", "FE", "HE", "JL", "SC", "TR")
-seq_mvad<- seqdef(mvad[, 17:86], alphabet = alphabet,
-                  states = shortlabel, labels = fulllabel, weights = mvad$weight,
-                  xtstep = 6)
-seq_mvad[1:2,]
-print(seq_mvad[1:2,],format="SPS")
-
-## 
-data(actcal)
-actcal.seq <- seqdef(actcal,13:24,
-                     labels=c("> 37 hours", "19-36 hours", "1-18 hours", "no work"))
+# ## sample data from TraMineR
+# data('mvad')
+# head(mvad)
+# alphabet = seqstatl(mvad[,17:86])
+# 
+# fulllabel<- c("employment", "further education",
+#               "higher education","joblessness", "school", "training")
+# shortlabel<- c("EM", "FE", "HE", "JL", "SC", "TR")
+# seq_mvad<- seqdef(mvad[, 17:86], alphabet = alphabet,
+#                   states = shortlabel, labels = fulllabel, weights = mvad$weight,
+#                   xtstep = 6)
+# seq_mvad[1:2,]
+# print(seq_mvad[1:2,],format="SPS")
+# 
+# ## 
+# data(actcal)
+# actcal.seq <- seqdef(actcal,13:24,
+#                      labels=c("> 37 hours", "19-36 hours", "1-18 hours", "no work"))
 
 ### traminer with my data
-multi_students <- multi_students %>% 
-  arrange(tmp) %>% 
-  # group_by(new_ID) %>% 
-  # # mutate(seq_time = seq_len(n())) %>% 
-  # mutate(end_time = 1:n())
-  mutate(tmp_time = seq(1:11651))
+# multi_students <- multi_students %>% 
+#   arrange(tmp) %>% 
+#   # group_by(new_ID) %>% 
+#   # # mutate(seq_time = seq_len(n())) %>% 
+#   # mutate(end_time = 1:n())
+#   mutate(tmp_time = seq(1:11651))
+
+
 
 # multi_students <- multi_students %>% 
 #   arrange(AZ_time4) %>% 
@@ -349,7 +354,7 @@ multi_students <- multi_students %>%
 #   # # mutate(seq_time = seq_len(n())) %>% 
 #   # mutate(end_time = 1:n())
 #   mutate(newer_time = seq(1:11651))
-df_wide <- read.csv("df_wide.csv", header = TRUE, na.strings=c("","NA"))
+# df_wide <- read.csv("df_wide.csv", header = TRUE, na.strings=c("","NA"))
 # 
 # # df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time",
 # #                       status='Mode', from='SPELL', to='STS', process=FALSE)
@@ -361,23 +366,22 @@ df_wide <- read.csv("df_wide.csv", header = TRUE, na.strings=c("","NA"))
 # df_wide_time = reshape(multi_students, idvar="new_ID", v.names="Mode", 
 #                   timevar="AZ_time4", direction='wide') # 11580 variables
 
-df_wide_date = reshape(multi_students, idvar="new_ID", v.names="Mode", 
+df_wide_date <- read.csv("df_wide_date.csv", header = TRUE, na.strings=c("","NA"))
+
+df_wide_date <- reshape(multi_students, idvar="new_ID", v.names="Mode", 
                   timevar="AZ_date", direction='wide') # 66 variables
-
-
 # write.csv(df_wide_date, file = "df_wide_date.csv")
-
 
 # df.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "tmp_time", 
                      # status='Mode', from='SPELL', to='STS', process=FALSE)
 
 # multi_seq <- read.csv("multi_seq.csv", header = TRUE, na.strings=c("","NA"))
 #Prepare a sequence for TraMineR:
-act_vals = c("1", "2", "3", "4", "5", "6")
-act_labels = c("Chat", "Email", "In Person", "Phone", "Webform", "Zoom")
+act_vals <- c("1", "2", "3", "4", "5", "6")
+act_labels <- c("Chat", "Email", "In Person", "Phone", "Webform", "Zoom")
 
-df_seq = seqdef(df_wide_date, var=28:66, states=act_vals, labels=act_labels, 
-                  id=df_wide_date$new_ID, informat='STS', compressed=TRUE)
+df_seq <- seqdef(df_wide_date, var=27:65, states=act_vals, labels=act_labels, 
+                  id=df_wide_date$new_ID, informat='STS', compressed=TRUE) # check to see if the var columns align
 
 # creating an alphabet
 alphabet(df_seq)
@@ -387,7 +391,7 @@ alphabet(df_seq)
 # write.csv(multi_seq, file = "multi_seq.csv")
 
 ### Frequency Table
-df_freq_table = attr(seqtab(df_seq, idxs = 0, format='STS'), "freq")
+df_freq_table <- attr(seqtab(df_seq, idxs = 0, format='STS'), "freq")
 length(which(df_freq_table$Freq==1)) # length where Freq is one is 1663 or unique
 length(which(df_freq_table$Freq>=2))# SO ONLY 353 HAVE A NONE UNIQUE SEQUENCE.
 
@@ -402,26 +406,47 @@ multi_seq <- df_seq %>%
   mutate(seq = )
   
 ##
-df_seq6 = df_seq[ order(df_seq$`Mode.2021-08-07`, df_seq$`Mode.2021-08-08`,
+df_seq6 <- df_seq[ order(df_seq$`Mode.2021-08-07`, df_seq$`Mode.2021-08-08`,
                          df_seq$`Mode.2021-08-09`, df_seq$`Mode.2021-08-10`,
                          df_seq$`Mode.2021-08-11`, df_seq$`Mode.2021-08-12`), ] #it just shows up ordered
 
 ### department format
-dept.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
-                     status='Dept', from='SPELL', to='STS', process=FALSE) 
-dept_seq <- seqdef(dept.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
+dept_wide_date <- reshape(multi_students, idvar="new_ID", v.names="Dept", 
+                        timevar="AZ_date", direction='wide') # 66 variables
+# dept.form <- seqformat(multi_students, id='new_ID', begin='tmp_time', end = "new_time", 
+#                      status='Dept', from='SPELL', to='STS', process=FALSE) 
+# dept_seq <- seqdef(dept.form, 1:300, left="DEL", gaps = "DEL") # cannot figure out the numbering system
 
-# write.csv(df_seq, file = "df_seq.csv")
+act_value <- c("A", "B", "C", "D", "E", "F")
+act_label <- c("24/7", "OSFA", "Other", "Registrar", "SECD", "SOS")
 
+dept_seq <- seqdef(dept_wide_date, var=27:65, states=act_value, labels=act_label, 
+                 id=df_wide_date$new_ID, informat='STS', compressed=TRUE) 
+# freq table for dept
+dept_freq_table <- attr(seqtab(dept_seq, idxs = 0, format='STS'), "freq")
 
+# top 10 dept
+ten_dept <- seqtab(dept_seq)
+ten_dept
+
+#visualizing dept data
+par(mfrow = c(1,2))
+seqiplot(dept_seq, border = NA, main = "First 10 sequences", with.legend = FALSE) # adding with.missing = FALSE did not change the plot
+seqfplot(dept_seq, main = "Top 10 sequences", border = NA, with.missing = FALSE, with.legend = FALSE, pbarw = TRUE)
+
+par(mfrow = c(1,2))
+seqdplot(dept_seq, main = "State distribution plot", border = NA, with.legend = FALSE) # state distribution plot
+seqlegend(dept_seq)
 # visualizing data
 # par(mfrow = c(2,2))
 # looks like i need to transpose some data
 par(mfrow = c(1,2))
-seqiplot(df_seq, border = NA, with.legend = FALSE) # adding with.missing = FALSE did not change the plot
-seqdplot(df_seq, main = "State distribution plot", with.legend = FALSE) # state distribution plot
-seqfplot(df_seq, border = NA, with.missing = FALSE, with.legend = FALSE, pbarw = TRUE)
-seqlegend(df_seq)
+seqiplot(df_seq6, border = NA, main = "First 10 sequences", with.legend = FALSE) # adding with.missing = FALSE did not change the plot
+seqfplot(df_seq6, border = NA, main = "Top 10 sequences", with.missing = FALSE, with.legend = FALSE, pbarw = TRUE)
+
+par(mfrow = c(1,2))
+seqdplot(df_seq6, border = NA, main = "State distribution plot", with.legend = FALSE) # state distribution plot
+seqlegend(df_seq6)
 
 ## transitions 
 trans = seqtrate(df_seq)
@@ -441,16 +466,15 @@ seqlegend(dept_seq)
 # sequence lengths
   seqlength(df_seq,)
 ### matches
-matches = seqpm(df_seq, "[1].{3,}") # 428 sequences have 3 plus states after chats
-matches = seqpm(df_seq, "[1].{2,}") # 489 sequences have 2 plus states after chats
-matches = seqpm(df_seq, "[1].{1,}") # 585 sequences have 1 plus state after chats
+matches <- seqpm(df_seq, "[1].{3,}") # 428 sequences have 3 plus states after chats
+matches <- seqpm(df_seq, "[1].{2,}") # 489 sequences have 2 plus states after chats
+matches <- seqpm(df_seq, "[1].{1,}") # 585 sequences have 1 plus state after chats
 
 # entropy index 
 seqHtplot(df_seq)
 
 # 10 most freq seq 
-seqtab(df_seq)
-
+ten_freq <- seqtab(df_seq)
 # with missing values
 subm <- seqsubm(df_seq, method = "CONSTANT", with.miss = TRUE)
 subm
@@ -458,3 +482,17 @@ subm
 ms.seq <- seqdef(df_seq, left= "DEL", gaps = "DEL", right = "DEL")
 data.eseq <- seqecreate(df_seq, tevent = "act_vals", 
                         end.event = attr(df_seq,'void'))
+
+## group data by dept
+dept_fall <- df_wide_date %>%
+  dplyr::group_by(Dept) %>% 
+  dplyr::filter(seqnum > 2)
+
+act_vals <- c("1", "2", "3", "4", "5", "6")
+act_labels <- c("Chat", "Email", "In Person", "Phone", "Webform", "Zoom")
+
+fall_seq <- seqdef(dept_fall, var=26:65, states=act_vals, labels=act_labels, 
+                 id=dept_fall$new_ID, informat='STS', compressed=TRUE)
+
+more_than_3 <- seqtab(fall_seq)
+more_than_3
